@@ -1,0 +1,67 @@
+<ion-header translucent>
+  <ion-toolbar>
+    <ion-title>B-Change</ion-title>
+    <ion-title>Compra y vende libros usados</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="greet">
+    <h2>¡Bienvenido!</h2>
+    <p>Accede a las secciones principales.</p>
+  </div>
+
+  <ion-grid>
+    <ion-row>
+      <ion-col size="6">
+        <ion-card routerLink="/catalog" class="card-link">
+          <ion-card-content>
+            <ion-icon name="book" class="big-icon"></ion-icon>
+            <h3>Catálogo</h3>
+            <p>Ver libros disponibles</p>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+
+      <ion-col size="6">
+        <ion-card routerLink="/login" class="card-link">
+          <ion-card-content>
+            <ion-icon name="person" class="big-icon"></ion-icon>
+            <h3>Login</h3>
+            <p>Iniciar sesión / Perfil</p>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+
+    <ion-row>
+      <ion-col size="6">
+        <!-- ejemplo que abre detalle del libro id=1 -->
+        <ion-card routerLink="/book-detail/1" class="card-link">
+          <ion-card-content>
+            <ion-icon name="information-circle" class="big-icon"></ion-icon>
+            <h3>Detalle (demo)</h3>
+            <p>Ver detalle del libro #1</p>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+
+      <ion-col size="6">
+        <!-- ejemplo que abre chat con userId=1 -->
+        <ion-card routerLink="/chat/1" class="card-link">
+          <ion-card-content>
+            <ion-icon name="chatbubbles" class="big-icon"></ion-icon>
+            <h3>Chat (demo)</h3>
+            <p>Contactar vendedor</p>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+
+  <ion-footer class="home-footer">
+    <ion-toolbar>
+      <ion-title size="small">B-Change • App móvil</ion-title>
+    </ion-toolbar>
+  </ion-footer>
+</ion-content>

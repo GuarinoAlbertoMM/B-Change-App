@@ -1,0 +1,28 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Catálogo</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-searchbar [(ngModel)]="query" placeholder="Buscar..."></ion-searchbar>
+
+  <ion-grid>
+    <ion-row>
+      <ion-col size="6" *ngFor="let book of filteredBooks()">
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>{{ book.title }}</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            {{ book.description }}
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button (click)="add()">+</ion-fab-button>
+  </ion-fab>
+</ion-content>
