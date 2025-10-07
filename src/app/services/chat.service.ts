@@ -17,8 +17,22 @@ export class ChatService {
     return msgs;
   }
 
-  async sendMessage(chatId: string, from: string, to: string, text: string | null, image: string | null, lat?: number, lng?: number) {
-    await this.db.addMessage(chatId, from, to, text, image, lat, lng);
+    async sendMessage(
+        chatId: string,
+        from: string,
+        to: string,
+        text: string | null,
+        image: string | null,
+        lat?: number | null,
+        lng?: number | null
+      ): Promise<void> {
+        if (!this.db) {
+          console.error('Database not initialized');
+          return;
+        }
+
+    await this.db.addMessage(chatId, from, to, text ?? '', image ?? '', lat, lng);
+
     // recargar
     await this.loadMessages(chatId);
   }

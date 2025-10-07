@@ -1,7 +1,6 @@
 // src/app/services/camera.service.ts
 import { Injectable } from '@angular/core';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
-import { Filesystem, Directory } from '@capacitor/filesystem';
 
 @Injectable({ providedIn: 'root' })
 export class CameraService {

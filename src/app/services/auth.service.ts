@@ -1,7 +1,7 @@
 // src/app/services/auth.service.ts
 import { Injectable } from '@angular/core';
 import { DatabaseService } from './database.service';
-import { Storage } from '@capacitor/storage';
+import { Preferences } from '@capacitor/preferences';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -13,7 +13,7 @@ export class AuthService {
     // simple: no hashing; puedes añadir hash si quieres
     await this.db.addUser(email, name, password);
     const user = await this.db.getUserByEmail(email);
-    await Storage.set({ key: this.currentUserKey, value: JSON.stringify(user) });
+    await Preferences.set({ key: this.currentUserKey, value: JSON.stringify(user) });
     return user;
   }
 
@@ -21,16 +21,16 @@ export class AuthService {
     const user = await this.db.getUserByEmail(email);
     if (!user) throw new Error('Usuario no encontrado');
     if (user.password !== password) throw new Error('Contraseña incorrecta');
-    await Storage.set({ key: this.currentUserKey, value: JSON.stringify(user) });
+    await Preferences.set({ key: this.currentUserKey, value: JSON.stringify(user) });
     return user;
   }
 
   async logout() {
-    await Storage.remove({ key: this.currentUserKey });
+    await Preferences.remove({ key: this.currentUserKey });
   }
 
   async getCurrentUser() {
-    const ret = await Storage.get({ key: this.currentUserKey });
+    const ret = await Preferences.get({ key: this.currentUserKey });
     return ret.value ? JSON.parse(ret.value) : null;
   }
 }

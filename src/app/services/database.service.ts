@@ -1,80 +1,121 @@
-// src/app/services/database.service.ts
 import { Injectable } from '@angular/core';
-import { Capacitor } from '@capacitor/core';
-import { CapacitorSQLite, SQLiteDBConnection } from '@capacitor-community/sqlite';
+import { CapacitorSQLite, SQLiteConnection, SQLiteDBConnection } from '@capacitor-community/sqlite';
 
-@Injectable({ providedIn: 'root' })
+@Injectable({
+  providedIn: 'root',
+})
 export class DatabaseService {
+  private sqliteConnection: SQLiteConnection;
   private db: SQLiteDBConnection | null = null;
-  private dbName = 'bchange_db';
 
-  constructor() {}
+  constructor() {
+    this.sqliteConnection = new SQLiteConnection(CapacitorSQLite);
+  }
 
-  // inicializa la DB (llamar en app init o antes de usarla)
-  public async init() {
+  // Inicializa la base de datos y crea la tabla si no existe
+  async initializeDatabase() {
     try {
-      // crea conexión
-      this.db= await CapacitorSQLite.createConnection({ database: this.dbName, version: 1 });
-      if (!this.db) throw new Error('Failed to create DB connection');
+      // Crear o abrir la conexión
+      this.db = await this.sqliteConnection.createConnection(
+        'bchange_db',      // nombre de la base de datos
+        false,             // no en modo encriptado
+        'no-encryption',   // tipo de encriptación
+        1,                 // versión
+        false              // modo de lectura (false = lectura/escritura)
+      );
+
+      // Abrir la conexión
       await this.db.open();
-      // ejecutar esquema
-      const sql = `
+
+      // Crear la tabla de usuarios, si no existe
+      const createTableQuery = `
         CREATE TABLE IF NOT EXISTS users (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
-          email TEXT UNIQUE,
           name TEXT,
+          email TEXT UNIQUE,
           password TEXT
         );
+      `;
+      // Crear tabla de mensajes
+      const createChatTableQuery = `
         CREATE TABLE IF NOT EXISTS messages (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
-          chat_id TEXT,
-          from_user TEXT,
-          to_user TEXT,
+          chatId TEXT,
+          sender TEXT,
+          receiver TEXT,
           text TEXT,
           image TEXT,
           latitude REAL,
           longitude REAL,
-          timestamp INTEGER
+          timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
         );
       `;
-      await this.db.execute(sql);
-      await CapacitorSQLite.closeConnection({ database: this.dbName });
+      await this.db.execute(createChatTableQuery);
+
+      await this.db.execute(createTableQuery);
+
+      console.log('✅ Base de datos inicializada correctamente');
     } catch (err) {
-      console.error('DB init error', err);
-      // Fallback: en web, el plugin ofrece implementación en IndexedDB internamente
+      console.error('❌ Error inicializando la base de datos:', err);
     }
   }
 
-  // ejecutar query genérico
-  public async run(query: string, values: any[] = []) {
-    if (!this.db) throw new Error('DB not initialized');
-    const res = await this.db!.run(query, values);
-    return res;
+  // Insertar usuario
+  async addUser(name: string, email: string, password: string) {
+    if (!this.db) {
+      console.error('La base de datos no está inicializada');
+      return;
+    }
+    const query = `INSERT INTO users (name, email, password) VALUES (?, ?, ?);`;
+    await this.db.run(query, [name, email, password]);
   }
 
-  // Helpers de usuario y mensajes
-  public async addUser(email: string, name: string, password: string) {
-    const q = `INSERT INTO users (email, name, password) VALUES (?, ?, ?)`;
-    return this.run(q, [email, name, password]);
+  // Obtener usuario por email
+  async getUserByEmail(email: string) {
+  if (!this.db) return null;
+  const query = `SELECT * FROM users WHERE email = ?;`;
+  const result = await this.db.query(query, [email]);
+  return result.values?.[0] || null;
+}
+
+  // Cerrar conexión (opcional)
+  async closeConnection() {
+    if (this.db) {
+      await this.sqliteConnection.closeConnection('bchange_db', false);
+      this.db = null;
+    }
   }
 
-  public async getUserByEmail(email: string) {
-    const q = `SELECT * FROM users WHERE email = ?`;
-    const r: any = await this.run(q, [email]);
-    // res.rows may vary según versión; plugin devuelve 'values' o 'rows'
-    return (r && r.values && r.values.length) ? r.values[0] : undefined;
+  // Obtener mensajes por chatId
+  async getMessages(chatId: string) {
+    if (!this.db) return [];
+    const query = `SELECT * FROM messages WHERE chatId = ? ORDER BY timestamp ASC;`;
+    const result = await this.db.query(query, [chatId]);
+    return result.values || [];
   }
 
-  public async addMessage(chatId: string, from: string, to: string, text: string | null, image: string | null, lat?: number, lng?: number) {
-    const ts = Date.now();
-    const q = `INSERT INTO messages (chat_id, from_user, to_user, text, image, latitude, longitude, timestamp)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-    return this.run(q, [chatId, from, to, text, image, lat ?? null, lng ?? null, ts]);
-  }
+  // Agregar mensaje
+  async addMessage(
+    chatId: string,
+    from: string,
+    to: string,
+    text: string = '',
+    image: string = '',
+    lat?: number | null,
+    lng?: number | null
+  ): Promise<void> {
+    if (!this.db) {
+      console.error('Database not connected');
+      return;
+    }
 
-  public async getMessages(chatId: string) {
-    const q = `SELECT * FROM messages WHERE chat_id = ? ORDER BY timestamp ASC`;
-    const r: any = await this.run(q, [chatId]);
-    return (r && r.values) ? r.values : [];
-  }
+    const query = `
+      INSERT INTO messages (chat_id, sender, receiver, text, image, lat, lng, timestamp)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+    `;
+
+    const values = [chatId, from, to, text, image, lat ?? null, lng ?? null, new Date().toISOString()];
+    await this.db.run(query, values);
+    }
+
 }

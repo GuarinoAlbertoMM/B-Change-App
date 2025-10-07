@@ -25,7 +25,7 @@ export class LoginPage {
     private router: Router
   ) {
     // inicializar DB si no se hizo
-    this.db.init().catch(err => console.warn('DB init failed', err));
+    this.db.initializeDatabase().catch((err: any) => console.warn('DB init failed', err));
   }
 
   async submit() {
