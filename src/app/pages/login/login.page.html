@@ -1,25 +1,29 @@
-<ion-header translucent>
+<ion-header>
   <ion-toolbar>
     <ion-title>B-Change</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding">
+  <ion-segment [(ngModel)]="isRegister">
+    <ion-segment-button value="false">Login</ion-segment-button>
+    <ion-segment-button value="true">Registro</ion-segment-button>
+  </ion-segment>
+
   <ion-item>
-    <ion-icon name="person" slot="start"></ion-icon>
-    <ion-input placeholder="Correo electrónico" [(ngModel)]="email"></ion-input>
+    <ion-label position="floating">Email</ion-label>
+    <ion-input [(ngModel)]="email" type="email"></ion-input>
+  </ion-item>
+
+  <ion-item *ngIf="isRegister">
+    <ion-label position="floating">Nombre</ion-label>
+    <ion-input [(ngModel)]="name"></ion-input>
   </ion-item>
 
   <ion-item>
-    <ion-icon name="lock-closed" slot="start"></ion-icon>
-    <ion-input type="password" placeholder="Contraseña" [(ngModel)]="password"></ion-input>
+    <ion-label position="floating">Contraseña</ion-label>
+    <ion-input [(ngModel)]="password" type="password"></ion-input>
   </ion-item>
 
-  <ion-button expand="block" (click)="login()">Iniciar sesión</ion-button>
-
-  <div class="socials">
-    <p>Continuar con:</p>
-    <ion-button fill="clear"><ion-icon name="logo-google"></ion-icon></ion-button>
-    <ion-button fill="clear"><ion-icon name="logo-facebook"></ion-icon></ion-button>
-  </div>
+  <ion-button expand="block" (click)="submit()">{{ isRegister ? 'Registrarse' : 'Entrar' }}</ion-button>
 </ion-content>

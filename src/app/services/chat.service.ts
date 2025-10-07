@@ -1,41 +1,25 @@
 // src/app/services/chat.service.ts
 import { Injectable } from '@angular/core';
-import { Message } from './models/chat';
+import { DatabaseService } from './database.service';
+import { BehaviorSubject } from 'rxjs';
 
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable({ providedIn: 'root' })
 export class ChatService {
-  private messages: Message[] = [
-    {
-      id: 1,
-      from: 'user1',
-      text: 'Hola, ¿todavía tienes el libro disponible?',
-      timestamp: new Date(),
-    },
-    {
-      id: 2,
-      from: 'user2',
-      text: '¡Sí! ¿Quieres verlo?',
-      timestamp: new Date(),
-    },
-  ];
-  messages$: any;
-  send: any;
+  // opcional: stream para la UI
+  private messagesSubject = new BehaviorSubject<any[]>([]);
+  messages$ = this.messagesSubject.asObservable();
 
-  constructor() {}
+  constructor(private db: DatabaseService) {}
 
-  getMessages(): Message[] {
-    return this.messages;
+  async loadMessages(chatId: string) {
+    const msgs = await this.db.getMessages(chatId);
+    this.messagesSubject.next(msgs);
+    return msgs;
   }
 
-  sendMessage(from: string, text: string): void {
-    const msg: Message = {
-      id: this.messages.length + 1,
-      from,
-      text,
-      timestamp: new Date(),
-    };
-    this.messages.push(msg);
+  async sendMessage(chatId: string, from: string, to: string, text: string | null, image: string | null, lat?: number, lng?: number) {
+    await this.db.addMessage(chatId, from, to, text, image, lat, lng);
+    // recargar
+    await this.loadMessages(chatId);
   }
 }
