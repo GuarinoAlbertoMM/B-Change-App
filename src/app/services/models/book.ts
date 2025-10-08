@@ -14,5 +14,5 @@ export interface Book {
   description: string;
   price: number;
   image: string;
-  color?: string; // agregado: opcional para usar como fondo/thumbnail
+  color: string; // agregado: opcional para usar como fondo/thumbnail
 }

@@ -16,29 +16,37 @@ import { DatabaseService } from '../../services/database.service';
 export class LoginPage {
   email = '';
   password = '';
-  name = '';      // para registro
+  name = '';
   isRegister = false;
+  loading = false;
 
-  constructor(
-    private auth: AuthService,
-    private db: DatabaseService,
-    private router: Router
-  ) {
-    // inicializar DB si no se hizo
-    this.db.initializeDatabase().catch((err: any) => console.warn('DB init failed', err));
+  constructor(private auth: AuthService, private db: DatabaseService, private router: Router) {
+    this.db.initializeDatabase().catch(() => {});
+  }
+
+  private isValidEmail(email: string) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
 
   async submit() {
+    if (!this.isValidEmail(this.email)) return alert('Email inválido');
+    if (!this.password || this.password.length < 4) return alert('Contraseña mínima 4 caracteres');
+
+    this.loading = true;
     try {
       if (this.isRegister) {
-        await this.auth.register(this.email, this.name, this.password);
+        if (!this.name) throw new Error('Ingresa tu nombre');
+        await this.auth.register(this.name, this.email, this.password);
+        alert('Registro exitoso');
       } else {
         await this.auth.login(this.email, this.password);
+        alert('Login correcto');
       }
-      // ir al catálogo
-      this.router.navigateByUrl('/catalog');
+      this.router.navigateByUrl('/catalog', { replaceUrl: true });
     } catch (err: any) {
-      alert(err.message || err);
+      alert(err?.message || 'Error');
+    } finally {
+      this.loading = false;
     }
   }
 }

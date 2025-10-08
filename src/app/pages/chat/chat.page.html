@@ -4,29 +4,30 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding">
-  <div *ngFor="let m of messages">
-    <div class="msg">
-      <strong>{{ m.from }}:</strong>
-      <span *ngIf="m.text">{{ m.text }}</span>
-      <div *ngIf="m.image">
-        <img [src]="'data:image/jpeg;base64,' + m.image" style="max-width:200px; border-radius:8px;" />
+<ion-content class="chat-content">
+  <div *ngFor="let m of messages" class="msg-row" [ngClass]="{'me': m.sender === (currentUser?.email)}">
+    <div class="msg-bubble">
+      <div *ngIf="m.text" class="msg-text">{{ m.text }}</div>
+      <div *ngIf="m.image" class="msg-image">
+        <img [src]="'data:image/jpeg;base64,' + m.image" />
       </div>
-      <div *ngIf="m.latitude">
-        <small>📍 {{ m.latitude }}, {{ m.longitude }}</small>
-      </div>
+      <div *ngIf="m.latitude" class="msg-loc">📍 {{ m.latitude }}, {{ m.longitude }}</div>
+      <div class="msg-time">{{ m.timestamp | date:'shortTime' }}</div>
     </div>
-    <hr/>
   </div>
 </ion-content>
 
 <ion-footer>
   <ion-toolbar>
-    <ion-item>
+    <ion-item lines="none" class="input-row">
       <ion-input placeholder="Escribe..." [(ngModel)]="newMsg"></ion-input>
-      <ion-button (click)="sendText()">Enviar</ion-button>
-      <ion-button (click)="sendPhoto()">📷</ion-button>
-      <ion-button (click)="sendLocation()">📍</ion-button>
+
+      <!-- botones separados visualmente -->
+      <div class="buttons-row">
+        <ion-button size="small" (click)="sendText()">Enviar</ion-button>
+        <ion-button size="small" (click)="sendPhoto()">📷</ion-button>
+        <ion-button size="small" (click)="sendLocation()">📍</ion-button>
+      </div>
     </ion-item>
   </ion-toolbar>
 </ion-footer>

@@ -1,37 +1,49 @@
-// src/app/services/camera.service.ts
 import { Injectable } from '@angular/core';
-import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { Camera, CameraResultType, CameraSource, Photo } from '@capacitor/camera';
 
-@Injectable({ providedIn: 'root' })
+@Injectable({
+  providedIn: 'root'
+})
 export class CameraService {
   constructor() {}
 
-  // devuelve base64 o path según preferencia
-  async takePhotoAsBase64() {
-    const photo = await Camera.getPhoto({
-      resultType: CameraResultType.Base64,
-      source: CameraSource.Camera,
-      quality: 70,
-    });
-    return photo.base64String; // puede ser null si cancelan
+  // Devuelve base64 (sin prefijo data:)
+  async takePhotoAsBase64(): Promise<string | null> {
+    try {
+      const photo: Photo = await Camera.getPhoto({
+        quality: 70,
+        allowEditing: false,
+        resultType: CameraResultType.Base64,
+        source: CameraSource.Camera
+      });
+      return photo.base64String ?? null;
+    } catch (err) {
+      console.warn('Camera cancelled or failed', err);
+      return null;
+    }
   }
 
-  // si prefieres guardar como archivo y devolver path:
-  async takePhotoAndSave(): Promise<string | null> {
-    const photo = await Camera.getPhoto({
-      resultType: CameraResultType.Uri,
-      source: CameraSource.Camera,
-      quality: 70,
-    });
-    if (!photo || !photo.path) return null;
-    // lee archivo y lo guarda si quieres
-    const base64 = await fetch(photo.webPath!).then(r => r.arrayBuffer()).then(buf => {
+  // Alternativa: obtener Uri y convertir a base64 (si prefieres)
+  async takePhotoFromUriAsBase64(): Promise<string | null> {
+    try {
+      const photo = await Camera.getPhoto({
+        quality: 70,
+        resultType: CameraResultType.Uri,
+        source: CameraSource.Camera
+      });
+      if (!photo || !photo.webPath) return null;
+      const resp = await fetch(photo.webPath);
+      const blob = await resp.blob();
+      const buffer = await blob.arrayBuffer();
       let binary = '';
-      const bytes = new Uint8Array(buf);
-      const len = bytes.byteLength;
-      for (let i = 0; i < len; i++) binary += String.fromCharCode(bytes[i]);
+      const bytes = new Uint8Array(buffer);
+      for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
       return btoa(binary);
-    });
-    return base64;
+    } catch (err) {
+      console.warn('Camera error', err);
+      return null;
+    }
   }
 }

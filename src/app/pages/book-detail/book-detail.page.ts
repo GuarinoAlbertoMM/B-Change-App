@@ -25,7 +25,7 @@ export class BookDetailPage implements OnInit {
     const idParam = this.route.snapshot.paramMap.get('id');
     const id = idParam ? Number(idParam) : NaN;
     if (!isNaN(id)) {
-      this.book = this.bookService.getBookById(id);
+      this.book = this.bookService.getById(id);
     }
   }
 

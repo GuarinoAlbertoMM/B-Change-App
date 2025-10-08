@@ -9,14 +9,17 @@ export class AuthService {
 
   constructor(private db: DatabaseService) {}
 
-  async register(email: string, name: string, password: string) {
-    // simple: no hashing; puedes añadir hash si quieres
-    await this.db.addUser(email, name, password);
+  //Crea un nuevo usuario
+  async register(name: string, email: string, password: string) {
+    const existing = await this.db.getUserByEmail(email);
+    if (existing) throw new Error('Ya existe un usuario con ese correo');
+    await this.db.addUser(name, email, password);
     const user = await this.db.getUserByEmail(email);
     await Preferences.set({ key: this.currentUserKey, value: JSON.stringify(user) });
     return user;
   }
 
+  //Valida credenciales
   async login(email: string, password: string) {
     const user = await this.db.getUserByEmail(email);
     if (!user) throw new Error('Usuario no encontrado');

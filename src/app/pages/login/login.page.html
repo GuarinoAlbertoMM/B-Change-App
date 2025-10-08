@@ -4,26 +4,31 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding">
-  <ion-segment [(ngModel)]="isRegister">
-    <ion-segment-button value="false">Login</ion-segment-button>
-    <ion-segment-button value="true">Registro</ion-segment-button>
-  </ion-segment>
+<ion-content class="login-content">
+  <div class="card">
+    <h2>{{ isRegister ? 'Crea tu cuenta' : 'Inicia sesión' }}</h2>
 
-  <ion-item>
-    <ion-label position="floating">Email</ion-label>
-    <ion-input [(ngModel)]="email" type="email"></ion-input>
-  </ion-item>
+    <ion-item>
+      <ion-label position="floating">Correo</ion-label>
+      <ion-input type="email" [(ngModel)]="email"></ion-input>
+    </ion-item>
 
-  <ion-item *ngIf="isRegister">
-    <ion-label position="floating">Nombre</ion-label>
-    <ion-input [(ngModel)]="name"></ion-input>
-  </ion-item>
+    <ion-item *ngIf="isRegister">
+      <ion-label position="floating">Nombre</ion-label>
+      <ion-input [(ngModel)]="name"></ion-input>
+    </ion-item>
 
-  <ion-item>
-    <ion-label position="floating">Contraseña</ion-label>
-    <ion-input [(ngModel)]="password" type="password"></ion-input>
-  </ion-item>
+    <ion-item>
+      <ion-label position="floating">Contraseña</ion-label>
+      <ion-input type="password" [(ngModel)]="password"></ion-input>
+    </ion-item>
 
-  <ion-button expand="block" (click)="submit()">{{ isRegister ? 'Registrarse' : 'Entrar' }}</ion-button>
+    <ion-button expand="block" (click)="submit()" [disabled]="loading">{{ isRegister ? 'Registrar' : 'Entrar' }}</ion-button>
+
+    <div class="toggle">
+      <ion-button fill="clear" (click)="isRegister = !isRegister">
+        {{ isRegister ? '¿Ya tienes cuenta? Inicia sesión' : '¿No tienes cuenta? Regístrate' }}
+      </ion-button>
+    </div>
+  </div>
 </ion-content>

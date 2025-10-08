@@ -1,28 +1,28 @@
 <ion-header>
   <ion-toolbar>
     <ion-title>Catálogo</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="add()">Agregar</ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content>
-  <ion-searchbar [(ngModel)]="query" placeholder="Buscar..."></ion-searchbar>
-
-  <ion-grid>
-    <ion-row>
-      <ion-col size="6" *ngFor="let book of filteredBooks()">
-        <ion-card>
-          <ion-card-header>
-            <ion-card-title>{{ book.title }}</ion-card-title>
-          </ion-card-header>
-          <ion-card-content>
-            {{ book.description }}
-          </ion-card-content>
-        </ion-card>
-      </ion-col>
-    </ion-row>
-  </ion-grid>
-
-  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-    <ion-fab-button (click)="add()">+</ion-fab-button>
-  </ion-fab>
+<ion-content class="ion-padding">
+  <ion-list>
+    <ion-item-sliding *ngFor="let book of books" #sliding>   <!-- 👈 AÑADIDO #sliding -->
+      <ion-item (click)="open(book)">
+        <ion-avatar slot="start">
+          <img [src]="book.image" />
+        </ion-avatar>
+        <ion-label>
+          <h2>{{ book.title }}</h2>
+          <p>{{ book.author }} • ${{ book.price }}</p>
+        </ion-label>
+      </ion-item>
+      <ion-item-options side="end">
+        <ion-item-option (click)="edit(book, sliding)" color="tertiary">Editar</ion-item-option>
+        <ion-item-option (click)="confirmDelete(book, sliding)" color="danger">Eliminar</ion-item-option>
+      </ion-item-options>
+    </ion-item-sliding>
+  </ion-list>
 </ion-content>
