@@ -1,5 +1,5 @@
 // src/app/app.routes.ts
-import { Routes } from '@angular/router';
+import { Routes, RouterModule } from '@angular/router';
 
 export const routes: Routes = [
   {
@@ -27,4 +27,5 @@ export const routes: Routes = [
     path: 'chat/:userId',
     loadComponent: () => import('./pages/chat/chat.page').then(m => m.ChatPage),
   },
+  
 ];

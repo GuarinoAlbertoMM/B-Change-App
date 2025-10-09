@@ -1,3 +1,27 @@
 .login-content { display:flex; align-items:center; justify-content:center; padding: 20px; background: #fff; height:100%; }
 .card { width:100%; max-width:420px; background: #014c85; padding: 18px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
 .toggle { text-align:center; margin-top:8px; }
+
+/* global.scss o cada page .scss */
+.home-btn {
+  --background: transparent;
+  padding-left: 6px;
+  padding-right: 6px;
+}
+
+.home-icon {
+  font-size: 22px;        /* tamaño de la casa */
+  color: #f2f4f8;         /* color claro (ajusta si quieres más blanco) */
+  opacity: 0.95;
+}
+
+ion-toolbar.home-toolbar {
+  --background: #f4f4f8; /* color claro */
+  --color: #222;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+ion-icon.home-icon {
+  color: #222;
+  opacity: 0.9;
+}

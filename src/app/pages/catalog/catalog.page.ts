@@ -1,27 +1,45 @@
+// src/app/pages/catalog/catalog.page.ts
 import { Component, OnInit } from '@angular/core';
-import { IonicModule, AlertController, IonItemSliding, ToastController } from '@ionic/angular';
+import { IonicModule, AlertController, ToastController } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
+import { RouterModule, Router } from '@angular/router';
 import { BookService } from '../../services/book.service';
+import { AuthService } from '../../services/auth.service';
+import { IonItemSliding } from '@ionic/angular';
 import { Book } from '../../services/models/book';
-import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-catalog',
   templateUrl: './catalog.page.html',
-  styleUrls: ['./catalog.page.scss'],
   standalone: true,
-  imports: [IonicModule, CommonModule],
+  imports: [IonicModule, CommonModule, RouterModule],
+  styleUrls: ['./catalog.page.scss']
 })
 export class CatalogPage implements OnInit {
   books: Book[] = [];
+  currentUserEmail = '';
 
-  constructor(private bs: BookService, private alertCtrl: AlertController, private toastCtrl: ToastController, private router: Router) {}
+  constructor(
+    private bs: BookService,
+    private auth: AuthService,
+    private alertCtrl: AlertController,
+    private toastCtrl: ToastController,
+    private router: Router
+  ) {}
 
-  ngOnInit() { this.load(); }
+  async ngOnInit() {
+    const u = await this.auth.getCurrentUser();
+    this.currentUserEmail = u?.email ?? '';
+    // suscribirse a cambios
+    this.bs.booksObservable.subscribe(arr => this.books = arr);
+    // cargar initial
+    const all = await this.bs.getAll();
+    this.books = all;
+  }
 
-  load() { this.books = this.bs.getAll(); }
-
-  open(book: Book) { this.router.navigate(['/book-detail', book.id]); }
+  openDetail(book: Book) {
+    this.router.navigate(['/book-detail', book.id]);
+  }
 
   async add() {
     const alert = await this.alertCtrl.create({
@@ -31,26 +49,25 @@ export class CatalogPage implements OnInit {
         { name: 'author', placeholder: 'Autor' },
         { name: 'price', placeholder: 'Precio', type: 'number' },
         { name: 'description', placeholder: 'Descripción' },
-        { name: 'image', placeholder: 'Ruta imagen (opcional)' },
-        { name: 'color', placeholder: 'Color hex (opcional)', value: '#f0a63f' }
+        { name: 'image', placeholder: 'URL imagen (opcional)' }
       ],
       buttons: [
         { text: 'Cancelar', role: 'cancel' },
-        { text: 'Agregar', handler: (data) => {
+        { text: 'Agregar', handler: async (data) => {
             if (!data.title || !data.author) return false;
-            this.bs.add({
+            await this.bs.add({
               title: data.title,
               author: data.author,
               price: Number(data.price) || 0,
               description: data.description || '',
               image: data.image || 'assets/images/book-default.jpg',
-              color: data.color || '#ccc'
+              color: '#ddd',
+              adminEmail: this.currentUserEmail
             });
-            this.load();
-            this.toast('Libro agregado');
+            const t = await this.toastCtrl.create({ message: 'Libro agregado', duration: 1200 });
+            await t.present();
             return true;
-          }
-        }
+        } }
       ]
     });
     await alert.present();
@@ -63,26 +80,24 @@ export class CatalogPage implements OnInit {
       inputs: [
         { name: 'title', placeholder: 'Título', value: book.title },
         { name: 'author', placeholder: 'Autor', value: book.author },
-        { name: 'price', placeholder: 'Precio', value: String(book.price), type: 'number' },
+        { name: 'price', placeholder: 'Precio', type: 'number', value: String(book.price ?? '') },
         { name: 'description', placeholder: 'Descripción', value: book.description },
-        { name: 'image', placeholder: 'Ruta imagen', value: book.image },
-        { name: 'color', placeholder: 'Color', value: book.color }
+        { name: 'image', placeholder: 'URL imagen', value: book.image }
       ],
       buttons: [
         { text: 'Cancelar', role: 'cancel' },
-        { text: 'Guardar', handler: (data) => {
-            this.bs.update(book.id, {
+        { text: 'Guardar', handler: async (data) => {
+            await this.bs.update(book.id, {
               title: data.title,
               author: data.author,
               price: Number(data.price) || 0,
               description: data.description,
-              image: data.image,
-              color: data.color
+              image: data.image
             });
-            this.load();
-            this.toast('Libro actualizado');
-          }
-        }
+            const t = await this.toastCtrl.create({ message: 'Libro actualizado', duration: 1200 });
+            await t.present();
+            return true;
+        } }
       ]
     });
     await alert.present();
@@ -91,22 +106,17 @@ export class CatalogPage implements OnInit {
   async confirmDelete(book: Book, sliding?: IonItemSliding) {
     sliding?.close();
     const a = await this.alertCtrl.create({
-      header: 'Confirmar',
+      header: 'Confirmar eliminación',
       message: `¿Eliminar "${book.title}"?`,
       buttons: [
         { text: 'No', role: 'cancel' },
-        { text: 'Sí', handler: () => {
-            this.bs.delete(book.id);
-            this.load();
-            this.toast('Libro eliminado');
-          } }
+        { text: 'Sí', handler: async () => {
+            await this.bs.delete(book.id);
+            const t = await this.toastCtrl.create({ message: 'Libro eliminado', duration: 1000 });
+            await t.present();
+        } }
       ]
     });
     await a.present();
-  }
-
-  async toast(msg: string) {
-    const t = await this.toastCtrl.create({ message: msg, duration: 1200 });
-    await t.present();
   }
 }

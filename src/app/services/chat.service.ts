@@ -1,39 +1,95 @@
 // src/app/services/chat.service.ts
 import { Injectable } from '@angular/core';
-import { DatabaseService } from './database.service';
+import { Preferences } from '@capacitor/preferences';
 import { BehaviorSubject } from 'rxjs';
 
-@Injectable({ providedIn: 'root' })
+export interface ChatMessage {
+  id: number;
+  chatId: string;
+  sender: string;
+  receiver: string;
+  text?: string | null;
+  image?: string | null; // base64 (sin prefijo) o URI según tu implementación
+  latitude?: number | null;
+  longitude?: number | null;
+  timestamp: string;
+}
+
+const MESSAGES_KEY_PREFIX = 'bchange_messages_';
+
+@Injectable({
+  providedIn: 'root'
+})
 export class ChatService {
-  // opcional: stream para la UI
-  private messagesSubject = new BehaviorSubject<any[]>([]);
-  messages$ = this.messagesSubject.asObservable();
+  private messagesStore: { [chatId: string]: ChatMessage[] } = {};
+  private messagesSubjects: { [chatId: string]: BehaviorSubject<ChatMessage[]> } = {};
 
-  constructor(private db: DatabaseService) {}
+  constructor() {}
 
-  async loadMessages(chatId: string) {
-    const msgs = await this.db.getMessages(chatId);
-    this.messagesSubject.next(msgs);
-    return msgs;
+  private getStorageKey(chatId: string) {
+    return `${MESSAGES_KEY_PREFIX}${chatId}`;
   }
 
-    async sendMessage(
-        chatId: string,
-        from: string,
-        to: string,
-        text: string | null,
-        image: string | null,
-        lat?: number | null,
-        lng?: number | null
-      ): Promise<void> {
-        if (!this.db) {
-          console.error('Database not initialized');
-          return;
-        }
+  private ensureSubject(chatId: string) {
+    if (!this.messagesSubjects[chatId]) {
+      this.messagesSubjects[chatId] = new BehaviorSubject<ChatMessage[]>([]);
+    }
+    return this.messagesSubjects[chatId];
+  }
 
-    await this.db.addMessage(chatId, from, to, text ?? '', image ?? '', lat, lng);
+  // Observable para la UI
+  messages$(chatId: string) {
+    return this.ensureSubject(chatId).asObservable();
+  }
 
-    // recargar
-    await this.loadMessages(chatId);
+  // Carga desde Preferences al iniciar la página de chat
+  async loadMessages(chatId: string) {
+    const key = this.getStorageKey(chatId);
+    const { value } = await Preferences.get({ key });
+    const arr: ChatMessage[] = value ? JSON.parse(value) : [];
+    this.messagesStore[chatId] = arr;
+    this.ensureSubject(chatId).next(arr.slice());
+    return arr;
+  }
+
+  // Persistir localmente
+  private async persist(chatId: string) {
+    const key = this.getStorageKey(chatId);
+    const arr = this.messagesStore[chatId] ?? [];
+    await Preferences.set({ key, value: JSON.stringify(arr) });
+  }
+
+  // Enviar mensaje (texto / foto / ubicación)
+  async sendMessage(
+    chatId: string,
+    sender: string,
+    receiver: string,
+    text: string | null,
+    image: string | null,
+    latitude?: number | null,
+    longitude?: number | null
+  ): Promise<ChatMessage> {
+    const arr = this.messagesStore[chatId] ?? [];
+    const message: ChatMessage = {
+      id: Date.now(),
+      chatId,
+      sender,
+      receiver,
+      text: text ?? null,
+      image: image ?? null,
+      latitude: latitude ?? null,
+      longitude: longitude ?? null,
+      timestamp: new Date().toISOString()
+    };
+    arr.push(message);
+    this.messagesStore[chatId] = arr;
+    this.ensureSubject(chatId).next(arr.slice());
+    await this.persist(chatId);
+    return message;
+  }
+
+  // Opcional: obtener mensajes actuales sin observable
+  getCachedMessages(chatId: string): ChatMessage[] {
+    return (this.messagesStore[chatId] ?? []).slice();
   }
 }

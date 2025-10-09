@@ -13,6 +13,7 @@ export interface Book {
   author: string;
   description: string;
   price: number;
-  image: string;
-  color: string; // agregado: opcional para usar como fondo/thumbnail
+  image?: string;
+  color: string;
+  adminEmail: string; // agregado: opcional para usar como fondo/thumbnail
 }

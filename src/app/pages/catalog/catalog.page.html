@@ -1,5 +1,10 @@
 <ion-header>
   <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button routerLink="/home" routerDirection="root" class="home-btn">
+        <ion-icon name="home" slot="icon-only" class="home-icon"></ion-icon>
+      </ion-button>
+    </ion-buttons>
     <ion-title>Catálogo</ion-title>
     <ion-buttons slot="end">
       <ion-button (click)="add()">Agregar</ion-button>
@@ -7,18 +12,20 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding">
+<ion-content>
   <ion-list>
-    <ion-item-sliding *ngFor="let book of books" #sliding>   <!-- 👈 AÑADIDO #sliding -->
-      <ion-item (click)="open(book)">
-        <ion-avatar slot="start">
+    <ion-item-sliding *ngFor="let book of books" #sliding>
+      <ion-item (click)="openDetail(book)">
+        <ion-thumbnail slot="start">
           <img [src]="book.image" />
-        </ion-avatar>
+        </ion-thumbnail>
         <ion-label>
           <h2>{{ book.title }}</h2>
           <p>{{ book.author }} • ${{ book.price }}</p>
+          <small *ngIf="book.adminEmail">Admin: {{ book.adminEmail }}</small>
         </ion-label>
       </ion-item>
+
       <ion-item-options side="end">
         <ion-item-option (click)="edit(book, sliding)" color="tertiary">Editar</ion-item-option>
         <ion-item-option (click)="confirmDelete(book, sliding)" color="danger">Eliminar</ion-item-option>

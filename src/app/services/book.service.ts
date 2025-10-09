@@ -1,32 +1,63 @@
+// src/app/services/book.service.ts
 import { Injectable } from '@angular/core';
+import { Preferences } from '@capacitor/preferences';
+import { BehaviorSubject } from 'rxjs';
 import { Book } from '../services/models/book';
 
-@Injectable({ providedIn: 'root' })
+const BOOKS_KEY = 'bchange_books';
+
+@Injectable({
+  providedIn: 'root'
+})
 export class BookService {
-  private books: Book[] = [
-    { id: 1, title: 'Introducción a Ionic', author: 'Juan Pérez', description: 'Guía práctica', price: 25, image: 'assets/images/book1.jpg', color: '#2f6fb3' },
-    { id: 2, title: 'Angular Avanzado', author: 'María Gómez', description: 'Patrones', price: 30, image: 'assets/images/book2.jpg', color: '#3fa78a' }
-  ];
+  private books$ = new BehaviorSubject<Book[]>([]);
+  booksObservable = this.books$.asObservable();
 
-  getAll() { return this.books.slice(); }
+  constructor() {
+    this.loadFromStorage();
+  }
 
-  getById(id: number) { return this.books.find(b => b.id === id); }
+  private async loadFromStorage() {
+    const { value } = await Preferences.get({ key: BOOKS_KEY });
+    const arr: Book[] = value ? JSON.parse(value) : [];
+    this.books$.next(arr);
+  }
 
-  add(book: Omit<Book, 'id'>) {
-    const id = this.books.length ? Math.max(...this.books.map(b => b.id)) + 1 : 1;
+  private async saveToStorage(arr: Book[]) {
+    await Preferences.set({ key: BOOKS_KEY, value: JSON.stringify(arr) });
+    this.books$.next(arr);
+  }
+
+  async getAll(): Promise<Book[]> {
+    return this.books$.getValue();
+  }
+
+  async add(book: Omit<Book,'id'>): Promise<Book> {
+    const arr = this.books$.getValue();
+    const id = arr.length ? Math.max(...arr.map(b => b.id)) + 1 : 1;
     const newBook: Book = { id, ...book };
-    this.books.push(newBook);
+    arr.push(newBook);
+    await this.saveToStorage(arr);
     return newBook;
   }
 
-  update(id: number, patch: Partial<Book>) {
-    const idx = this.books.findIndex(b => b.id === id);
-    if (idx < 0) return null;
-    this.books[idx] = { ...this.books[idx], ...patch };
-    return this.books[idx];
+  async update(id: number, patch: Partial<Book>): Promise<Book | null> {
+    const arr = this.books$.getValue();
+    const idx = arr.findIndex(b => b.id === id);
+    if (idx === -1) return null;
+    arr[idx] = { ...arr[idx], ...patch };
+    await this.saveToStorage(arr);
+    return arr[idx];
   }
 
-  delete(id: number) {
-    this.books = this.books.filter(b => b.id !== id);
+  async delete(id: number): Promise<void> {
+    let arr = this.books$.getValue();
+    arr = arr.filter(b => b.id !== id);
+    await this.saveToStorage(arr);
+  }
+
+  // helper: find by id
+  findById(id: number): Book | undefined {
+    return this.books$.getValue().find(b => b.id === id);
   }
 }

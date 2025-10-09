@@ -1,5 +1,4 @@
 .chat-content { padding: 12px; background: #fafafa; }
-
 .msg-row { display:flex; margin-bottom:8px; }
 .msg-row.me { justify-content: flex-end; }
 .msg-bubble {
@@ -7,7 +6,6 @@
   background: #ececec;
   padding: 8px 10px;
   border-radius: 12px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 .msg-row.me .msg-bubble { background: #2f6fb3; color: white; }
 .msg-image img { width: 180px; border-radius: 8px; display:block; margin-top:6px; }

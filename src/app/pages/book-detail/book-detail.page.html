@@ -1,18 +1,28 @@
 <ion-header>
-  <ion-toolbar>
-    <ion-title>{{ book?.title }}</ion-title>
+  <ion-toolbar class="home-toolbar">
+    <ion-buttons slot="start">
+      <ion-button routerLink="/home" routerDirection="root" class="home-btn">
+        <ion-icon name="home" slot="icon-only" class="home-icon"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Detalle</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="editBook()">Editar</ion-button>
+      <ion-button color="danger" (click)="deleteBook()">Eliminar</ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding" *ngIf="book">
-  <!-- si hay color, usamos fondo; si hay imagen, la mostramos -->
-  <div *ngIf="book.color" class="large-thumb" [style.background]="book.color"></div>
-  <img *ngIf="book.image" [src]="book.image" alt="book cover" style="width:100%; border-radius:8px; margin-bottom:12px;" />
-
-  <h2>{{ book.title }}</h2>
-  <p><strong>Autor:</strong> {{ book.author }}</p>
-  <p>{{ book.description }}</p>
-  <p><strong>Precio:</strong> ${{ book.price }}</p>
-
-  <ion-button expand="block" (click)="goToChat()">Chatear con vendedor</ion-button>
+<ion-content class="ion-padding">
+  <div *ngIf="book">
+    <h2>{{ book.title }}</h2>
+    <p><b>Autor:</b> {{ book.author }}</p>
+    <p><b>Precio:</b> ${{ book.price }}</p>
+    <p>{{ book.description }}</p>
+    <img *ngIf="book.image" [src]="book.image" style="max-width:100%; border-radius:8px; margin-top:8px;" />
+    <p *ngIf="book.adminEmail"><small>Creado por: {{ book.adminEmail }}</small></p>
+  </div>
+  <div *ngIf="!book">
+    <p>Libro no encontrado.</p>
+  </div>
 </ion-content>

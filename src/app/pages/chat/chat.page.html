@@ -1,18 +1,30 @@
 <ion-header>
-  <ion-toolbar>
+  <ion-toolbar class="home-toolbar">
+    <ion-buttons slot="start">
+      <ion-button routerLink="/home" routerDirection="root" class="home-btn">
+        <ion-icon name="home" slot="icon-only" class="home-icon"></ion-icon>
+      </ion-button>
+    </ion-buttons>
     <ion-title>Chat</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="chat-content">
-  <div *ngFor="let m of messages" class="msg-row" [ngClass]="{'me': m.sender === (currentUser?.email)}">
+<ion-content class="chat-content" #content>
+  <div *ngFor="let m of messages" class="msg-row" [ngClass]="{'me': m.sender === currentUserEmail}">
     <div class="msg-bubble">
       <div *ngIf="m.text" class="msg-text">{{ m.text }}</div>
+
       <div *ngIf="m.image" class="msg-image">
+        <!-- si guardaste base64 sin prefijo -->
         <img [src]="'data:image/jpeg;base64,' + m.image" />
+        <!-- si guardaste URI usa: <img [src]="m.image" /> -->
       </div>
-      <div *ngIf="m.latitude" class="msg-loc">📍 {{ m.latitude }}, {{ m.longitude }}</div>
-      <div class="msg-time">{{ m.timestamp | date:'shortTime' }}</div>
+
+      <div *ngIf="m.latitude && m.longitude" class="msg-loc">
+        📍 {{ m.latitude.toFixed(6) }}, {{ m.longitude.toFixed(6) }}
+      </div>
+
+      <div class="msg-time">{{ m.timestamp | date:'short' }}</div>
     </div>
   </div>
 </ion-content>
@@ -22,7 +34,6 @@
     <ion-item lines="none" class="input-row">
       <ion-input placeholder="Escribe..." [(ngModel)]="newMsg"></ion-input>
 
-      <!-- botones separados visualmente -->
       <div class="buttons-row">
         <ion-button size="small" (click)="sendText()">Enviar</ion-button>
         <ion-button size="small" (click)="sendPhoto()">📷</ion-button>

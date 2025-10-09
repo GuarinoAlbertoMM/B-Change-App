@@ -1,39 +1,75 @@
 // src/app/services/auth.service.ts
 import { Injectable } from '@angular/core';
-import { DatabaseService } from './database.service';
 import { Preferences } from '@capacitor/preferences';
 
-@Injectable({ providedIn: 'root' })
+export interface User {
+  id: number;
+  name: string;
+  email: string;
+  password: string;
+  role?: 'admin' | 'user';
+}
+
+const USERS_KEY = 'bchange_users';
+const CURRENT_USER_KEY = 'bchange_current_user';
+
+@Injectable({
+  providedIn: 'root'
+})
 export class AuthService {
-  private currentUserKey = 'bchange_current_user';
+  constructor() {}
 
-  constructor(private db: DatabaseService) {}
-
-  //Crea un nuevo usuario
-  async register(name: string, email: string, password: string) {
-    const existing = await this.db.getUserByEmail(email);
-    if (existing) throw new Error('Ya existe un usuario con ese correo');
-    await this.db.addUser(name, email, password);
-    const user = await this.db.getUserByEmail(email);
-    await Preferences.set({ key: this.currentUserKey, value: JSON.stringify(user) });
-    return user;
+  private async getUsers(): Promise<User[]> {
+    const { value } = await Preferences.get({ key: USERS_KEY });
+    return value ? JSON.parse(value) as User[] : [];
   }
 
-  //Valida credenciales
-  async login(email: string, password: string) {
-    const user = await this.db.getUserByEmail(email);
+  private async saveUsers(users: User[]) {
+    await Preferences.set({ key: USERS_KEY, value: JSON.stringify(users) });
+  }
+
+  // crear usuario de prueba si no existe
+  async ensureTestAdmin(): Promise<User> {
+    const users = await this.getUsers();
+    const found = users.find(u => u.email === 'adminprueba@gmail.com');
+    if (found) return found;
+    const admin: User = {
+      id: Date.now(),
+      name: 'Admin Prueba',
+      email: 'adminprueba@gmail.com',
+      password: 'Admin.123',
+      role: 'admin'
+    };
+    users.push(admin);
+    await this.saveUsers(users);
+    return admin;
+  }
+
+  async register(name: string, email: string, password: string, role: 'user' | 'admin' = 'user'): Promise<User> {
+    const users = await this.getUsers();
+    if (users.find(u => u.email === email)) throw new Error('Ya existe un usuario con ese correo');
+    const newUser: User = { id: Date.now(), name, email, password, role };
+    users.push(newUser);
+    await this.saveUsers(users);
+    await Preferences.set({ key: CURRENT_USER_KEY, value: JSON.stringify(newUser) });
+    return newUser;
+  }
+
+  async login(email: string, password: string): Promise<User> {
+    const users = await this.getUsers();
+    const user = users.find(u => u.email === email);
     if (!user) throw new Error('Usuario no encontrado');
     if (user.password !== password) throw new Error('Contraseña incorrecta');
-    await Preferences.set({ key: this.currentUserKey, value: JSON.stringify(user) });
+    await Preferences.set({ key: CURRENT_USER_KEY, value: JSON.stringify(user) });
     return user;
   }
 
-  async logout() {
-    await Preferences.remove({ key: this.currentUserKey });
+  async logout(): Promise<void> {
+    await Preferences.remove({ key: CURRENT_USER_KEY });
   }
 
-  async getCurrentUser() {
-    const ret = await Preferences.get({ key: this.currentUserKey });
-    return ret.value ? JSON.parse(ret.value) : null;
+  async getCurrentUser(): Promise<User | null> {
+    const { value } = await Preferences.get({ key: CURRENT_USER_KEY });
+    return value ? JSON.parse(value) as User : null;
   }
 }
